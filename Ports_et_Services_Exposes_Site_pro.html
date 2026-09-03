@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+
+<html data-lang="fr" data-theme="light" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Ports &amp; Services Exposés — Cours &amp; TP d'audit réseau</title>
+<meta content="Support de cours et de TP sur l'audit des ports et services réseau exposés : analogie de l'immeuble, méthodologie d'audit, laboratoire Kali Linux / Ubuntu Server, remédiation et vérification." name="description"/>
+<meta content="Innocent Twagirumukiza" name="author"/>
+<meta content="Ports &amp; Services Exposés — Cours &amp; TP d'audit réseau" property="og:title"/>
+<meta content="Comprendre, auditer et réduire la surface d'exposition d'un serveur : du cours théorique jusqu'à la remédiation vérifiée en travaux pratiques." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="fr_FR" property="og:locale"/>
+<meta content="#0a1420" name="theme-color"/>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1b2a'/%3E%3Ctext x='32' y='40' font-family='monospace' font-size='22' font-weight='700' fill='%236fd3c7' text-anchor='middle'%3EP/S%3C/text%3E%3C/svg%3E" rel="icon" type="image/svg+xml"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --font-body:'Inter',system-ui,sans-serif;
+  --font-head:'Space Grotesk',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+  --radius:6px;
+  --maxw:760px;
+  --navw:270px;
+}
+html[data-theme="light"]{
+  --bg:#f5f7fa;
+  --surface:#ffffff;
+  --surface-alt:#eef2f7;
+  --ink:#101826;
+  --ink-soft:#54607a;
+  --ink-faint:#8a94a8;
+  --accent:#2563a6;
+  --accent-ink:#ffffff;
+  --strong:#10233d;
+  --border:#dde3ea;
+  --code-bg:#111a2c;
+  --code-ink:#d6e2f0;
+  --warn-bg:#fff8e8; --warn-border:#d9a441; --warn-ink:#8a5f14;
+  --danger-bg:#fdecec; --danger-border:#c0392b; --danger-ink:#a3241a;
+  --ok-ink:#166a37;
+  --shadow:0 1px 2px rgba(16,24,38,.06), 0 8px 24px rgba(16,24,38,.05);
+}
+html[data-theme="dark"]{
+  --bg:#0a1120;
+  --surface:#111a2c;
+  --surface-alt:#0d1626;
+  --ink:#e7edf6;
+  --ink-soft:#a7b3c8;
+  --ink-faint:#6c7994;
+  --accent:#5fa8e6;
+  --accent-ink:#0a1120;
+  --strong:#bcd7f5;
+  --border:#233250;
+  --code-bg:#060b16;
+  --code-ink:#cfe0f2;
+  --warn-bg:#2a2410; --warn-border:#caa246; --warn-ink:#e9cd84;
+  --danger-bg:#2a1414; --danger-border:#c25b53; --danger-ink:#e39a92;
+  --ok-ink:#5fce8f;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+html{font-size:16px; scroll-behavior:smooth;}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); line-height:1.65;
+  transition:background .25s ease, color .25s ease;
+}
+html[data-lang="fr"] .en, html[data-lang="en"] .fr{display:none !important;}
+a{color:var(--accent);}
+img{max-width:100%;}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; gap:14px;
+  padding:10px 20px;
+  background:var(--surface); border-bottom:1px solid var(--border);
+}
+.topbar .brand{
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--font-head); font-weight:700; font-size:1rem;
+  color:var(--strong); text-decoration:none; margin-right:auto;
+  white-space:nowrap;
+}
+.topbar .brand .mark{
+  width:26px; height:26px; border-radius:6px;
+  background:linear-gradient(135deg, var(--accent), var(--strong));
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-family:var(--font-mono); font-size:.65rem; font-weight:600;
+  flex:none;
+}
+.navburger{
+  display:none; background:none; border:1px solid var(--border); border-radius:var(--radius);
+  width:36px; height:36px; color:var(--ink); font-size:1.1rem; cursor:pointer;
+}
+.controls{display:flex; align-items:center; gap:8px; flex-wrap:nowrap;}
+.ctrl-group{
+  display:flex; align-items:center; border:1px solid var(--border);
+  border-radius:999px; overflow:hidden; background:var(--surface-alt);
+}
+.ctrl-group button{
+  border:none; background:none; color:var(--ink-soft); cursor:pointer;
+  font-family:var(--font-mono); font-size:.72rem; font-weight:600;
+  padding:6px 11px; letter-spacing:.03em;
+}
+.ctrl-group button.active{background:var(--accent); color:var(--accent-ink);}
+.iconbtn{
+  border:1px solid var(--border); background:var(--surface-alt); color:var(--ink);
+  border-radius:999px; width:34px; height:34px; cursor:pointer; font-size:.95rem;
+  display:flex; align-items:center; justify-content:center;
+}
+.fontctrl{display:flex; align-items:center; gap:2px;}
+.fontctrl button{
+  border:1px solid var(--border); background:var(--surface-alt); color:var(--ink);
+  width:30px; height:30px; cursor:pointer; font-family:var(--font-mono); font-weight:600; font-size:.75rem;
+}
+.fontctrl button:first-child{border-radius:6px 0 0 6px;}
+.fontctrl button:last-child{border-radius:0 6px 6px 0;}
+
+/* ---------- LAYOUT ---------- */
+.shell{display:flex; max-width:1280px; margin:0 auto;}
+.side{
+  width:var(--navw); flex:none; padding:32px 18px 60px 24px;
+  position:sticky; top:57px; align-self:flex-start; height:calc(100vh - 57px);
+  overflow-y:auto;
+}
+.side .part-tag{
+  font-family:var(--font-mono); font-size:.68rem; letter-spacing:.08em;
+  color:var(--ink-faint); text-transform:uppercase; margin:18px 0 6px 10px;
+}
+.side .part-tag:first-child{margin-top:0;}
+.side a{
+  display:block; padding:6px 10px; border-radius:var(--radius);
+  color:var(--ink-soft); text-decoration:none; font-size:.85rem;
+  border-left:2px solid transparent;
+}
+.side a:hover{color:var(--ink); background:var(--surface-alt);}
+.side a.active{color:var(--accent); border-left-color:var(--accent); font-weight:600; background:var(--surface-alt);}
+.side a .n{font-family:var(--font-mono); color:var(--ink-faint); margin-right:6px; font-size:.75rem;}
+
+main{flex:1; min-width:0; padding:0 24px 100px;}
+
+/* ---------- HERO ---------- */
+.hero{
+  max-width:var(--maxw); margin:56px auto 30px; padding:0 4px;
+}
+.hero .kicker{
+  font-family:var(--font-mono); color:var(--accent); font-size:.78rem;
+  letter-spacing:.06em; margin-bottom:14px;
+}
+.hero h1{
+  font-family:var(--font-head); font-size:2.5rem; line-height:1.1;
+  color:var(--strong); margin:0 0 16px; font-weight:700;
+}
+.hero p.lead{
+  color:var(--ink-soft); font-size:1.05rem; max-width:600px; margin:0 0 26px;
+}
+.hero .meta{
+  display:flex; flex-wrap:wrap; gap:10px; margin-bottom:28px;
+}
+.hero .meta span{
+  font-family:var(--font-mono); font-size:.72rem; background:var(--surface-alt);
+  border:1px solid var(--border); color:var(--ink-soft);
+  padding:5px 10px; border-radius:999px;
+}
+.hero .cta{
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--strong); color:#fff; text-decoration:none;
+  padding:11px 20px; border-radius:var(--radius); font-weight:600; font-size:.9rem;
+}
+.hero .cta:hover{background:var(--accent);}
+
+/* ---------- CONTENT ---------- */
+.wrap{max-width:var(--maxw); margin:0 auto;}
+.divider{
+  max-width:var(--maxw); margin:70px auto 40px; padding:26px 26px;
+  background:var(--strong); color:#fff; border-radius:10px;
+  position:relative; overflow:hidden;
+}
+.divider::before{
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(120deg, var(--accent) 0%, transparent 55%);
+  opacity:.35;
+}
+.divider .pnum{
+  font-family:var(--font-mono); font-size:.72rem; letter-spacing:.1em;
+  text-transform:uppercase; color:#bcd7f5; position:relative;
+}
+.divider h2{
+  font-family:var(--font-head); font-size:1.55rem; margin:8px 0 8px; position:relative; font-weight:700;
+}
+.divider p{color:#cbd8ea; margin:0; max-width:520px; position:relative; font-size:.92rem;}
+
+section.card{
+  max-width:var(--maxw); margin:0 auto 8px; scroll-margin-top:72px;
+}
+.sec-head{
+  display:flex; align-items:baseline; gap:12px;
+  padding:22px 0 4px; margin-top:34px;
+  border-top:1px solid var(--border);
+}
+section.card:first-of-type .sec-head{border-top:none; margin-top:0;}
+.sec-head .num{
+  font-family:var(--font-mono); color:var(--accent); font-size:.85rem; font-weight:600;
+}
+.sec-head h2{
+  font-family:var(--font-head); font-size:1.35rem; color:var(--strong); margin:0; font-weight:700;
+}
+h3{font-family:var(--font-head); font-size:1.02rem; color:var(--accent); margin:22px 0 8px; font-weight:600;}
+p{margin:8px 0 12px; text-align:left;}
+.card p, .card ul, .card ol, .card blockquote, .card table, .card pre, .card .flow, .card .callout, .card .tree, .card .arch, .card .fw{
+  padding-left:0;
+}
+
+blockquote{
+  margin:16px 0; padding:14px 18px; border-left:3px solid var(--ink-faint);
+  background:var(--surface-alt); color:var(--ink-soft); font-style:italic; border-radius:0 6px 6px 0;
+}
+
+.callout{
+  background:var(--surface-alt); border-left:4px solid var(--accent);
+  padding:12px 16px; margin:16px 0; border-radius:0 8px 8px 0; font-size:.92rem;
+}
+.callout .lbl{
+  font-family:var(--font-mono); font-weight:600; text-transform:uppercase; font-size:.68rem;
+  letter-spacing:.06em; color:var(--accent); margin-bottom:5px;
+}
+.callout.question{background:var(--warn-bg); border-color:var(--warn-border);}
+.callout.question .lbl{color:var(--warn-ink);}
+.callout.warn{background:var(--danger-bg); border-color:var(--danger-border);}
+.callout.warn .lbl{color:var(--danger-ink);}
+.callout.key{background:var(--strong); border-color:var(--accent); color:#fff;}
+.callout.key .lbl{color:#9cc0e8;}
+
+pre{
+  background:var(--code-bg); color:var(--code-ink); padding:13px 16px; border-radius:8px;
+  font-family:var(--font-mono); font-size:.83rem; overflow-x:auto; margin:12px 0; line-height:1.6;
+}
+code{
+  font-family:var(--font-mono); background:var(--surface-alt); padding:2px 6px; border-radius:4px;
+  font-size:.85em; color:var(--danger-ink);
+}
+pre code{background:none; color:inherit; padding:0;}
+
+table{width:100%; border-collapse:collapse; margin:14px 0; font-size:.85rem;}
+th{background:var(--accent); color:#fff; text-align:left; padding:8px 10px; font-weight:600;}
+td{padding:7px 10px; border-bottom:1px solid var(--border);}
+tr:nth-child(even) td{background:var(--surface-alt);}
+
+.flow{
+  background:var(--surface-alt); border:1px solid var(--border); border-radius:8px;
+  padding:16px; margin:14px 0; text-align:center; font-size:.86rem;
+}
+.flow .step{
+  display:inline-block; background:var(--surface); border:1.5px solid var(--accent); color:var(--strong);
+  padding:7px 13px; border-radius:6px; margin:4px; font-weight:600;
+}
+html[data-theme="dark"] .flow .step{color:var(--ink);}
+.flow .arrow{color:var(--accent); font-weight:700; margin:0 4px;}
+.flow.vert .step{display:block; margin:4px auto; width:fit-content;}
+.flow.vert .arrow{display:block; margin:2px 0;}
+
+.arch{background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:18px; margin:14px 0; text-align:center;}
+.arch .box{display:inline-block; border:2px solid var(--strong); background:var(--surface); padding:11px 24px; border-radius:8px; font-weight:700; color:var(--strong); font-size:.88rem;}
+html[data-theme="dark"] .arch .box{color:var(--ink); border-color:var(--accent);}
+.arch .box small{display:block; font-weight:400; color:var(--ink-faint); font-size:.72rem; margin-top:3px;}
+.arch .link{color:var(--accent); font-size:.78rem; margin:8px 0; font-weight:600;}
+
+.tree{background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:16px 22px; margin:14px 0; font-family:var(--font-mono); font-size:.82rem; line-height:1.8;}
+.tree .ok{color:var(--ok-ink); font-weight:600;}
+.tree .no{color:var(--danger-ink); font-weight:600;}
+
+.fw{background:var(--surface-alt); border:1px solid var(--border); border-radius:8px; padding:18px; margin:14px 0; text-align:center;}
+.fw .node{display:inline-block; background:var(--surface); border:2px solid var(--strong); color:var(--strong); font-weight:700; padding:7px 20px; border-radius:8px; font-size:.85rem;}
+html[data-theme="dark"] .fw .node{color:var(--ink); border-color:var(--accent);}
+.fw .rules{display:inline-block; margin:8px auto; text-align:left; background:var(--surface); border:1.5px solid var(--accent); border-radius:8px; padding:9px 18px; font-family:var(--font-mono); font-size:.78rem;}
+.fw .rules div{padding:2px 0;}
+.fw .rules .blocked{color:var(--danger-ink); font-weight:700;}
+.fw .rules .allowed{color:var(--ok-ink); font-weight:700;}
+
+ul,ol{margin:8px 0 14px 22px; padding:0;}
+li{margin-bottom:5px;}
+
+/* lexique */
+dl.lex{margin:14px 0;}
+dl.lex dt{font-family:var(--font-head); font-weight:600; color:var(--strong); font-size:1rem; margin-top:16px;}
+dl.lex dd{margin:3px 0 0; color:var(--ink-soft);}
+
+/* quiz-like question chips for the "démarche" section */
+.qlist{list-style:none; margin:14px 0; padding:0; display:grid; gap:8px;}
+.qlist li{
+  background:var(--surface-alt); border:1px solid var(--border); border-radius:8px;
+  padding:10px 14px; font-size:.9rem; display:flex; gap:10px; align-items:flex-start;
+}
+.qlist li .qn{font-family:var(--font-mono); color:var(--accent); font-weight:700;}
+
+/* ---------- FOOTER ---------- */
+footer{
+  border-top:1px solid var(--border); margin-top:80px; padding:40px 24px 30px;
+  background:var(--surface);
+}
+.foot-wrap{max-width:1280px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:space-between; gap:30px;}
+.foot-col h4{font-family:var(--font-head); font-size:.85rem; color:var(--strong); margin:0 0 10px;}
+.foot-col a, .foot-col button.linklike{
+  display:block; background:none; border:none; text-align:left; cursor:pointer;
+  color:var(--ink-soft); text-decoration:none; font-size:.82rem; margin-bottom:7px; padding:0;
+  font-family:var(--font-body);
+}
+.foot-col a:hover, .foot-col button.linklike:hover{color:var(--accent);}
+.foot-sig{
+  font-family:var(--font-mono); color:var(--ink-faint); font-size:.75rem; margin-top:6px;
+}
+.foot-bottom{
+  max-width:1280px; margin:30px auto 0; padding-top:18px; border-top:1px solid var(--border);
+  font-size:.72rem; color:var(--ink-faint); display:flex; flex-wrap:wrap; gap:8px 20px; justify-content:space-between;
+}
+
+/* ---------- MODAL ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(6,10,18,.55); backdrop-filter:blur(2px);
+  display:none; align-items:flex-start; justify-content:center; z-index:100; padding:6vh 16px;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--surface); color:var(--ink); max-width:640px; width:100%;
+  border-radius:10px; box-shadow:var(--shadow); max-height:86vh; overflow-y:auto;
+  border:1px solid var(--border);
+}
+.modal-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 22px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface);
+}
+.modal-head h3{margin:0; font-size:1.1rem; color:var(--strong);}
+.modal-head button{background:none; border:none; font-size:1.3rem; color:var(--ink-faint); cursor:pointer; line-height:1;}
+.modal-body{padding:20px 22px 26px; font-size:.88rem; color:var(--ink-soft);}
+.modal-body h4{color:var(--strong); font-size:.9rem; margin:16px 0 6px;}
+.modal-body p{margin:6px 0;}
+.modal-body table{font-size:.8rem;}
+.modal-body td, .modal-body th{padding:6px 8px;}
+
+/* ---------- scroll top ---------- */
+.scrolltop{
+  position:fixed; bottom:22px; right:22px; width:42px; height:42px; border-radius:50%;
+  background:var(--strong); color:#fff; border:none; cursor:pointer; font-size:1rem;
+  box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:40;
+}
+.scrolltop.show{opacity:1; pointer-events:auto;}
+
+@media (max-width: 980px){
+  .side{
+    position:fixed; top:57px; left:0; height:calc(100vh - 57px); width:280px;
+    background:var(--surface); border-right:1px solid var(--border);
+    transform:translateX(-100%); transition:transform .25s ease; z-index:60; padding-top:20px;
+  }
+  .side.open{transform:translateX(0);}
+  .navburger{display:flex; align-items:center; justify-content:center;}
+  main{padding:0 18px 90px;}
+  .hero h1{font-size:1.9rem;}
+}
+@media (max-width: 620px){
+  .controls{gap:5px;}
+  .ctrl-group button{padding:6px 8px;}
+  .topbar .brand span.wordmark{display:none;}
+}
+
+/* =========================================================
+   VISUAL SYSTEM — aligned with "Vulnérabilités des mots de passe"
+   ========================================================= */
+:root{
+  --navy-950:#0a1420;
+  --navy-900:#0d1b2a;
+  --navy-800:#16324f;
+  --navy-700:#1f4569;
+  --teal:#6fd3c7;
+  --teal-dim:#3c8f85;
+  --paper:#f6f8fa;
+  --paper-line:#dfe6ec;
+  --card:#ffffff;
+  --warn:#c9660a;
+  --warn-bg:#fdf1e6;
+  --danger:#b3261e;
+  --danger-bg:#fbeaea;
+  --good:#2f7d3c;
+  --good-bg:#eef8f0;
+  --info:#2a6f97;
+  --info-bg:#eaf3f8;
+}
+html[data-theme="dark"]{
+  --paper:#0a1420;
+  --card:#0d1b2a;
+  --ink:#e7edf3;
+  --ink-soft:#b8c6d2;
+  --paper-line:#294056;
+}
+body{background:var(--paper);color:var(--ink);}
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:64px;
+  background:var(--navy-950);border-bottom:1px solid rgba(255,255,255,.08);
+  padding:0 18px;z-index:100;
+}
+.topbar .navburger{
+  display:none;width:34px;height:34px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;
+}
+.topbar .brand{color:#fff;gap:10px;}
+.topbar .brand .mark{
+  width:26px;height:26px;border-radius:6px;
+  background:linear-gradient(135deg,var(--teal),var(--navy-700));
+  color:var(--navy-950);
+}
+.topbar .brand .titles{display:flex;flex-direction:column;line-height:1.15;}
+.topbar .brand .titles .t1{font-size:13.5px;}
+.topbar .brand .titles .t2{font-size:10.5px;color:var(--teal);font-weight:500;}
+.controls{margin-left:auto;}
+.ctrl-group{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);}
+.ctrl-group button{color:#c9d6e0;}
+.ctrl-group button.active{background:var(--teal);color:var(--navy-950);}
+.fontctrl button,.iconbtn{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;}
+
+.shell{display:block;padding-top:64px;min-height:100vh;}
+.side{
+  position:fixed;top:64px;bottom:0;left:0;width:280px;
+  background:var(--navy-900);color:#dbe6ee;overflow-y:auto;
+  padding:18px 0 40px;z-index:90;border-right:1px solid rgba(255,255,255,.06);
+}
+.side .part-tag{
+  padding:10px 22px 4px;font-size:10.5px;letter-spacing:1.4px;
+  color:var(--teal);text-transform:uppercase;font-weight:700;margin-top:10px;
+}
+.side .part-tag:first-child{margin-top:0;}
+.side a{
+  display:flex;gap:10px;align-items:baseline;padding:7px 22px;
+  color:#c3d1dd;text-decoration:none;font-size:13.4px;border-left:3px solid transparent;
+}
+.side a .n{color:#6f8299;font-family:var(--font-mono);font-size:11.5px;width:16px;flex-shrink:0;}
+.side a:hover{background:rgba(255,255,255,.05);color:#fff;}
+.side a.active{background:rgba(111,211,199,.1);border-left-color:var(--teal);color:#fff;font-weight:600;}
+.side a.active .n{color:var(--teal);}
+main{margin-left:280px;padding:0 0 90px;}
+.hero{
+  max-width:none;margin:0;padding:64px 48px 56px;
+  background:radial-gradient(ellipse at 20% 0%,#16324f 0%,#0d1b2a 55%,#0a1420 100%);
+  color:#fff;
+}
+.hero .kicker{
+  max-width:900px;margin:0 auto 34px;font-size:11px;letter-spacing:2.6px;
+  color:var(--teal);font-weight:700;border-bottom:1px solid rgba(255,255,255,.18);
+  padding-bottom:16px;display:flex;justify-content:space-between;align-items:center;
+}
+.hero h1{
+  max-width:900px;margin:0 auto 16px;font-family:'Space Grotesk',system-ui,sans-serif;
+  font-size:2.8rem;line-height:1.08;color:#fff;
+}
+.hero p.lead{max-width:900px;margin:0 auto 18px;color:#d4e0e8;font-size:1.05rem;}
+.hero .signature{max-width:900px;margin:0 auto 28px;color:var(--teal);font-family:var(--font-mono);font-size:.78rem;}
+.hero .stats{
+  max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);
+}
+.hero .stats>div{padding:14px 16px;border-right:1px solid rgba(255,255,255,.1);}
+.hero .stats>div:last-child{border-right:0;}
+.hero .stats .k{font-family:var(--font-mono);font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:#7f98ad;}
+.hero .stats .v{margin-top:5px;font-size:.82rem;color:#e5edf3;font-weight:600;}
+.hero .cta{
+  display:inline-flex;margin:26px 0 0 max(calc((100% - 900px)/2),0px);
+  background:var(--teal);color:var(--navy-950);padding:10px 18px;border-radius:6px;font-weight:700;
+}
+.hero .cta:hover{background:#8ae0d6;}
+
+.wrap{max-width:1200px;margin:0 48px;}
+.divider{
+  max-width:1200px;margin:54px 48px 30px;padding:24px 26px;
+  background:var(--navy-900);color:#fff;border-radius:0;
+  border-left:4px solid var(--teal);position:relative;overflow:hidden;
+}
+.divider::before{
+  background:linear-gradient(120deg,var(--navy-700) 0%,transparent 60%);opacity:.55;
+}
+.divider .pnum{color:var(--teal);}
+.divider h2{font-size:1.5rem;}
+.divider p{color:#cbd8e2;}
+section.card{max-width:1200px;margin:0 48px 8px;scroll-margin-top:78px;}
+.sec-head{
+  display:flex;align-items:baseline;gap:12px;padding:22px 0 8px;margin-top:34px;
+  border-top:1px solid var(--paper-line);
+}
+.sec-head .num{color:var(--teal-dim);font-family:var(--font-mono);}
+.sec-head h2{font-size:1.35rem;color:var(--navy-800);font-family:'Space Grotesk',system-ui,sans-serif;}
+html[data-theme="dark"] .sec-head h2{color:var(--teal);}
+h3{font-family:'Space Grotesk',system-ui,sans-serif;color:var(--navy-700);}
+.callout{border-left-color:var(--teal);background:var(--info-bg);}
+.callout .lbl{color:var(--info);}
+.callout.key{background:var(--navy-900);border-left-color:var(--teal);color:#fff;}
+.callout.key .lbl{color:var(--teal);}
+.callout.question{background:var(--warn-bg);border-color:var(--warn);}
+.callout.warn{background:var(--danger-bg);border-color:var(--danger);}
+.flow,.arch,.tree,.fw,.qlist li{border-color:var(--paper-line);background:var(--card);}
+.flow .step{border-color:var(--teal-dim);background:var(--card);color:var(--navy-800);}
+html[data-theme="dark"] .flow .step{color:#e7edf3;}
+.flow .arrow{color:var(--teal-dim);}
+table{border:1px solid var(--paper-line);}
+th{background:var(--navy-800);}
+tr:nth-child(even) td{background:#eef4f7;}
+html[data-theme="dark"] tr:nth-child(even) td{background:#122336;}
+code{color:var(--danger);background:#f2e8e8;}
+html[data-theme="dark"] code{background:#24191b;color:#ffaaa3;}
+footer{
+  margin-left:280px;border-top:1px solid var(--paper-line);
+  background:var(--card);padding:40px 48px 30px;margin-top:0;
+}
+.foot-wrap,.foot-bottom{max-width:1200px;margin-left:0;}
+.foot-col h4{color:var(--navy-800);}
+html[data-theme="dark"] .foot-col h4{color:var(--teal);}
+.modal-overlay{background:rgba(6,10,18,.72);}
+.modal{background:var(--card);color:var(--ink);border-color:var(--paper-line);}
+.modal-head{background:var(--card);}.modal-head h3{color:var(--navy-800);}
+html[data-theme="dark"] .modal-head h3{color:var(--teal);}
+.scrolltop{background:var(--navy-900);}
+
+@media(max-width:980px){
+  .shell{padding-top:64px;}
+  .side{top:64px;transform:translateX(-100%);transition:transform .25s ease;box-shadow:8px 0 24px rgba(0,0,0,.25);}
+  .side.open{transform:translateX(0);}
+  .topbar .navburger{display:flex;align-items:center;justify-content:center;}
+  main{margin-left:0;padding:0 18px 90px;}
+  .hero{margin:0 -18px;padding:52px 24px 44px;}
+  .hero .stats{grid-template-columns:repeat(2,1fr);}
+  .hero .stats>div:nth-child(2){border-right:0;}
+  .hero .cta{margin-left:0;}
+  section.card,.divider{max-width:100%;margin-left:0;margin-right:0;}
+  footer{margin-left:0;padding:36px 24px 28px;}
+}
+@media(max-width:620px){
+  .topbar .brand .titles .t2{display:none;}
+  .topbar .brand .titles .t1{font-size:12px;}
+  .hero h1{font-size:2rem;}
+  .hero .stats{grid-template-columns:1fr;}
+  .hero .stats>div{border-right:0;border-bottom:1px solid rgba(255,255,255,.1);}
+  .hero .stats>div:last-child{border-bottom:0;}
+}
+
+/* ---------- ACCESSIBILITY & POLISH ---------- */
+.skip-link{
+  position:absolute; left:12px; top:-60px; z-index:200;
+  background:var(--teal); color:var(--navy-950); font-weight:700;
+  padding:10px 16px; border-radius:6px; text-decoration:none; font-size:.85rem;
+  transition:top .15s ease;
+}
+.skip-link:focus{top:12px;}
+
+a:focus-visible, button:focus-visible, .side a:focus-visible{
+  outline:2px solid var(--teal); outline-offset:2px; border-radius:4px;
+}
+.ctrl-group button:focus-visible, .fontctrl button:focus-visible{outline-offset:-2px;}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  *,*::before,*::after{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+}
+
+@media print{
+  .topbar, .side, .navburger, .scrolltop, .hero .cta, footer .foot-col:nth-child(3), .skip-link{display:none !important;}
+  .shell{display:block;padding-top:0;}
+  main{margin-left:0;padding:0;}
+  body{background:#fff;color:#000;}
+  .hero{background:none;color:#000;padding:0 0 24px;}
+  .hero .kicker,.hero p.lead,.hero .signature{color:#333;}
+  .hero .stats{border-color:#ccc;background:none;}
+  .hero .stats .k,.hero .stats .v{color:#000;}
+  section.card,.divider{max-width:100%;margin:0 0 18px;page-break-inside:avoid;}
+  .divider{background:#eee;color:#000;border-left-color:#999;}
+  .divider::before{display:none;}
+  pre{border:1px solid #ccc;}
+  a{color:#000;text-decoration:underline;}
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main"><span class="fr">Aller au contenu</span><span class="en">Skip to content</span></a>
+<!-- ============ TOP BAR ============ -->
+<div class="topbar">
+<button aria-label="Menu" class="navburger" id="navburger">☰</button>
+<a class="brand" href="#top">
+<span class="mark">P/S</span>
+<span class="titles">
+<span class="t1"><span class="fr">Ports &amp; Services Exposés</span><span class="en">Exposed Ports &amp; Services</span></span>
+<span class="t2"><span class="fr">Audit réseau · Kali Linux</span><span class="en">Network auditing · Kali Linux</span></span>
+</span>
+</a>
+<div class="controls">
+<div aria-label="Langue / Language" class="ctrl-group" role="group">
+<button aria-pressed="true" class="active" id="btn-fr" onclick="setLang('fr')">FR</button>
+<button aria-pressed="false" id="btn-en" onclick="setLang('en')">EN</button>
+</div>
+<div aria-label="Taille du texte" class="fontctrl">
+<button onclick="changeFont(-1)" title="A-">A−</button>
+<button onclick="changeFont(1)" title="A+">A+</button>
+</div>
+<button class="iconbtn" id="theme-toggle" onclick="toggleTheme()" title="Thème">🌙</button>
+</div>
+</div>
+<div id="top"></div>
+<div class="shell">
+<!-- ============ SIDE NAV ============ -->
+<nav aria-label="Sommaire du cours" class="side" id="sidenav">
+<div class="part-tag"><span class="fr">Partie 1 — Cours</span><span class="en">Part 1 — Course</span></div>
+<a class="n1" href="#s1"><span class="n">1</span><span class="fr">L'analogie de l'immeuble</span><span class="en">The building analogy</span></a>
+<a class="n1" href="#s2"><span class="n">2</span><span class="fr">Ports inutiles ouverts</span><span class="en">Unnecessary open ports</span></a>
+<a class="n1" href="#s3"><span class="n">3</span><span class="fr">Services inutiles actifs</span><span class="en">Unnecessary active services</span></a>
+<a class="n1" href="#s4"><span class="n">4</span><span class="fr">Administration exposée</span><span class="en">Exposed administrative access</span></a>
+<a class="n1" href="#s5"><span class="n">5</span><span class="fr">Pare-feu mal configuré</span><span class="en">Misconfigured firewall</span></a>
+<a class="n1" href="#s6"><span class="n">6</span><span class="fr">Démarche pendant le TP</span><span class="en">Lab methodology</span></a>
+<div class="part-tag"><span class="fr">Partie 2 — TP</span><span class="en">Part 2 — Lab</span></div>
+<a class="n2" href="#s7"><span class="n">7</span><span class="fr">Objectif pédagogique</span><span class="en">Learning objective</span></a>
+<a class="n2" href="#s8"><span class="n">8</span><span class="fr">Architecture</span><span class="en">Architecture</span></a>
+<a class="n2" href="#s9"><span class="n">9</span><span class="fr">Démarche d'audit</span><span class="en">Audit methodology</span></a>
+<a class="n2" href="#s10"><span class="n">10</span><span class="fr">Étape 1 — Préparer</span><span class="en">Step 1 — Prepare</span></a>
+<a class="n2" href="#s11"><span class="n">11</span><span class="fr">Étape 2 — Exposer</span><span class="en">Step 2 — Expose</span></a>
+<a class="n2" href="#s12"><span class="n">12</span><span class="fr">Étape 3 — Nmap</span><span class="en">Step 3 — Nmap</span></a>
+<a class="n2" href="#s13"><span class="n">13</span><span class="fr">Étape 4 — Identifier</span><span class="en">Step 4 — Identify</span></a>
+<a class="n2" href="#s14"><span class="n">14</span><span class="fr">Étape 5 — Cas SSH</span><span class="en">Step 5 — The SSH case</span></a>
+<a class="n2" href="#s15"><span class="n">15</span><span class="fr">Étape 6 — Pare-feu</span><span class="en">Step 6 — Assess the firewall</span></a>
+<a class="n2" href="#s16"><span class="n">16</span><span class="fr">Étape 7 — Remédiation</span><span class="en">Step 7 — Remediation</span></a>
+<a class="n2" href="#s17"><span class="n">17</span><span class="fr">Étape 8 — Audit final</span><span class="en">Step 8 — Final audit</span></a>
+<a class="n2" href="#s18"><span class="n">18</span><span class="fr">Synthèse</span><span class="en">Summary</span></a>
+<a class="n2" href="#s19"><span class="n">19</span><span class="fr">Lexique</span><span class="en">Glossary</span></a>
+</nav>
+<!-- ============ MAIN ============ -->
+<main id="main">
+<!-- HERO -->
+<div class="hero">
+<div class="kicker">
+<span class="fr">MODULE — SÉCURITÉ DES SYSTÈMES &amp; AUDIT RÉSEAU</span>
+<span class="en">MODULE — SYSTEMS SECURITY &amp; NETWORK AUDIT</span>
+</div>
+<h1>
+<span class="fr">Ports et services exposés</span>
+<span class="en">Exposed ports and services</span>
+</h1>
+<p class="lead">
+<span class="fr">Comprendre, auditer et réduire la surface d'exposition d'un serveur : du cours théorique jusqu'à la remédiation vérifiée en travaux pratiques.</span>
+<span class="en">Understand, audit and reduce a server's exposure: from theory to verified remediation in a hands-on laboratory.</span>
+</p>
+<div class="signature">by twagirumukiza</div>
+<div class="meta stats">
+<div><div class="k"><span class="fr">Module</span><span class="en">Module</span></div><div class="v"><span class="fr">Sécurité des systèmes &amp; audit réseau</span><span class="en">Systems security &amp; network auditing</span></div></div>
+<div><div class="k"><span class="fr">Niveau</span><span class="en">Level</span></div><div class="v"><span class="fr">Initiation</span><span class="en">Beginner</span></div></div>
+<div><div class="k"><span class="fr">Environnement</span><span class="en">Environment</span></div><div class="v"><span class="fr">Kali Linux · Ubuntu Server</span><span class="en">Kali Linux · Ubuntu Server</span></div></div>
+<div><div class="k"><span class="fr">Outils</span><span class="en">Tools</span></div><div class="v">Nmap · ss · systemctl · UFW</div></div>
+</div>
+<a class="cta" href="#s1">
+<span class="fr">Commencer le cours</span><span class="en">Start the course</span> →
+      </a>
+</div>
+<!-- =================== PART 1 DIVIDER =================== -->
+<div class="divider">
+<div class="pnum"><span class="fr">Partie 1</span><span class="en">Part 1</span></div>
+<h2><span class="fr">Cours — Comprendre la notion</span><span class="en">Course — Understanding the concept of exposure</span></h2>
+<p>
+<span class="fr">Avant toute manipulation pratique, cette première partie pose les bases théoriques : pourquoi un port ouvert augmente la surface d'attaque, et comment raisonner comme un auditeur face à un service exposé.</span>
+<span class="en">Before any hands-on work, this first part establishes the theoretical foundations: why an open port increases the attack surface, and how to reason like an auditor when assessing an exposed service.</span>
+</p>
+</div>
+<!-- 1 -->
+<section class="card" id="s1">
+<div class="sec-head"><span class="num">01</span><h2><span class="fr">L'analogie de l'immeuble</span><span class="en">The building analogy</span></h2></div>
+<p><span class="fr">Pour introduire la notion auprès des étudiants, l'idée centrale à transmettre est très simple :</span>
+<span class="en">To introduce the concept to students, the central idea is simple:</span></p>
+<div class="callout key">
+<div class="lbl"><span class="fr">Idée clé</span><span class="en">Key idea</span></div>
+<span class="fr">Un port ouvert n'est pas forcément une vulnérabilité, mais chaque port exposé augmente la surface d'attaque.</span>
+<span class="en">An open port is not necessarily a vulnerability, but every exposed port increases the attack surface.</span>
+</div>
+<p><span class="fr">Une bonne façon de faire comprendre ce principe est de recourir à une analogie concrète :</span>
+<span class="en">A useful way to make this principle intuitive is to use a concrete analogy:</span></p>
+<blockquote>
+<span class="fr">« Imaginez qu'un serveur soit un immeuble. Les <b>ports</b> sont comme des portes d'entrée, et les <b>services</b> sont les activités qui se déroulent derrière ces portes.<br/><br/>Si une porte est ouverte alors qu'on n'en a pas besoin, elle offre potentiellement un point d'entrée supplémentaire à un attaquant. »</span>
+<span class="en">“Imagine a server as a building. <b>Ports</b> are like entrance doors, and <b>services</b> are the activities taking place behind those doors.<br/><br/>If a door is left open when it is not needed, it may provide an attacker with an additional entry point.”</span>
+</blockquote>
+<p><span class="fr">Cette image permet de fixer un vocabulaire commun avant d'entrer dans les détails techniques : un <b>port</b> est un point d'accès, un <b>service</b> est ce qui répond derrière ce point d'accès, et une <b>exposition inutile</b> est une porte laissée ouverte sans raison.</span>
+<span class="en">This analogy establishes a shared vocabulary before going into technical detail: a <b>port</b> is an access point, a <b>service</b> is the program responding through that access point, and <b>unnecessary exposure</b> is a door left open without a justified need.</span></p>
+</section>
+<!-- 2 -->
+<section class="card" id="s2">
+<div class="sec-head"><span class="num">02</span><h2><span class="fr">Ports inutiles ouverts sur Internet</span><span class="en">Unnecessary ports exposed to the Internet</span></h2></div>
+<p><span class="fr">Un ordinateur peut écouter sur différents ports : le port 22 pour SSH, le port 80 pour HTTP, le port 443 pour HTTPS, etc. L'idée importante à retenir est la chaîne suivante :</span>
+<span class="en">A machine can listen on several ports: 22 for SSH, 80 for HTTP, 443 for HTTPS, and so on. The key chain to remember is:</span></p>
+<div class="flow">
+<span class="step"><span class="fr">Port ouvert</span><span class="en">Open port</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Service accessible</span><span class="en">Reachable service</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Interaction possible</span><span class="en">Possible interaction</span></span>
+</div>
+<p><span class="fr">Par exemple, si un serveur web n'a aucune raison de proposer SSH directement sur Internet, laisser le port 22 accessible à tout le monde augmente inutilement son exposition.</span>
+<span class="en">For example, if a web server has no reason to expose SSH directly to the Internet, leaving port 22 accessible to everyone unnecessarily increases its exposure.</span></p>
+<p><span class="fr">Avec Kali, on peut illustrer cela dans un <b>réseau de TP autorisé</b> avec la commande suivante :</span>
+<span class="en">With Kali, this can be demonstrated on an <b>authorized lab network</b> using the following command:</span></p>
+<pre><code>nmap &lt;TARGET_IP&gt;</code></pre>
+<p><span class="fr">Les étudiants peuvent alors observer un résultat de ce type :</span>
+<span class="en">Students can then observe a result such as:</span></p>
+<pre><code>PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+443/tcp  open  https</code></pre>
+<div class="callout question">
+<div class="lbl"><span class="fr">Message à transmettre</span><span class="en">Message to convey</span></div>
+<span class="fr">Le but n'est pas de dire « port ouvert = faille », mais de demander : pourquoi ce port est-il ouvert ? Quel service écoute derrière ? Est-ce réellement nécessaire ?</span>
+<span class="en">The goal is not to say “open port = vulnerability”, but to ask: Why is this port open? Which service is listening behind it? Is that service actually necessary?</span>
+</div>
+</section>
+<!-- 3 -->
+<section class="card" id="s3">
+<div class="sec-head"><span class="num">03</span><h2><span class="fr">Services non nécessaires actifs</span><span class="en">Unnecessary active services</span></h2></div>
+<p><span class="fr">Un service peut être installé et fonctionner alors qu'il n'est jamais réellement utilisé. Plus il y a de services actifs, plus il y a de logiciels susceptibles d'avoir une mauvaise configuration ou une vulnérabilité.</span>
+<span class="en">A service can be installed and running even though it is never actually used. The more active services there are, the more software may introduce a misconfiguration or vulnerability.</span></p>
+<div class="tree">
+<span class="fr">Serveur</span><span class="en">Server</span><br/>
+         ├── HTTP       → <span class="ok"><span class="fr">nécessaire</span><span class="en">needed</span></span><br/>
+         ├── HTTPS      → <span class="ok"><span class="fr">nécessaire</span><span class="en">needed</span></span><br/>
+         ├── SSH        → <span class="ok"><span class="fr">nécessaire uniquement pour l'administration</span><span class="en">needed for administration only</span></span><br/>
+         └── <span class="fr">ancien service</span><span class="en">legacy service</span> → <span class="no"><span class="fr">inutile</span><span class="en">unneeded</span></span>
+</div>
+<p><span class="fr">Sur une machine Linux de TP, on peut montrer les services en écoute avec :</span>
+<span class="en">On a Linux lab machine, listening services can be displayed with:</span></p>
+<pre><code>ss -tuln</code></pre>
+<div class="callout">
+<div class="lbl"><span class="fr">Distinction pédagogique importante</span><span class="en">Important teaching distinction</span></div>
+<span class="fr">Notre première question n'est pas « comment attaquer ce service ? », mais « pourquoi ce service est-il exposé ? » — c'est cette bascule qui fait comprendre la démarche défensive plutôt qu'offensive.</span>
+<span class="en">Our first question is not “how would I attack this service?”, but “why is this service exposed?” This shift encourages a defensive rather than offensive mindset.</span>
+</div>
+</section>
+<!-- 4 -->
+<section class="card" id="s4">
+<div class="sec-head"><span class="num">04</span><h2><span class="fr">Administration accessible depuis l'extérieur</span><span class="en">Administrative access reachable from outside</span></h2></div>
+<p><span class="fr">Prenons l'exemple de <b>SSH</b>. Ce service permet d'administrer une machine à distance : c'est très pratique, mais si le serveur SSH est accessible depuis Internet, il devient une cible potentielle. Le même raisonnement s'applique à <b>RDP</b> sous Windows.</span>
+<span class="en">Take <b>SSH</b> as an example. It allows remote administration of a machine, which is convenient, but if the SSH server is reachable from the Internet, it becomes a potential target. The same reasoning applies to <b>RDP</b> on Windows.</span></p>
+<div class="flow vert">
+<span class="step"><span class="fr">Administration nécessaire ?</span><span class="en">Is administrative access needed?</span></span>
+<span class="arrow">↓</span>
+<span class="step"><span class="fr">Oui</span><span class="en">Yes</span></span>
+<span class="arrow">↓</span>
+<span class="step"><span class="fr">Doit-elle être accessible depuis Internet ?</span><span class="en">Does it need to be reachable from the Internet?</span></span>
+<span class="arrow">↓</span>
+<span class="step"><span class="fr">Pas forcément</span><span class="en">Not necessarily</span></span>
+<span class="arrow">↓</span>
+<span class="step"><span class="fr">Limiter l'accès</span><span class="en">Restrict access</span></span>
+</div>
+<p><span class="fr">Concrètement, on peut autoriser l'administration uniquement :</span><span class="en">In practice, administrative access can be limited to:</span></p>
+<ul>
+<li><span class="fr">depuis le <b>réseau interne</b> ;</span><span class="en">the <b>internal network</b>;</span></li>
+<li><span class="fr">depuis une <b>adresse IP d'administration</b> dédiée ;</span><span class="en">a dedicated <b>administration IP address</b>;</span></li>
+<li><span class="fr">via un <b>VPN</b> ;</span><span class="en">a <b>VPN</b>;</span></li>
+<li><span class="fr">avec une <b>authentification forte</b>.</span><span class="en"><b>strong authentication</b>.</span></li>
+</ul>
+</section>
+<!-- 5 -->
+<section class="card" id="s5">
+<div class="sec-head"><span class="num">05</span><h2><span class="fr">Mauvaise configuration du pare-feu</span><span class="en">Misconfigured firewall</span></h2></div>
+<p><span class="fr">Le pare-feu constitue une sorte de <b>filtre entre la machine et le réseau</b>. Une configuration simplifiée pourrait être représentée ainsi :</span>
+<span class="en">The firewall acts as a <b>filter between the machine and the network</b>. A simplified configuration could look like this:</span></p>
+<div class="fw">
+<div class="node">Internet</div>
+<div>▼</div>
+<div class="rules">
+<div><b><span class="fr">Pare-feu</span><span class="en">Firewall</span></b></div>
+<div class="blocked">22  → <span class="fr">bloqué</span><span class="en">blocked</span></div>
+<div class="allowed">80  → <span class="fr">autorisé</span><span class="en">allowed</span></div>
+<div class="allowed">443 → <span class="fr">autorisé</span><span class="en">allowed</span></div>
+</div>
+<div>▼</div>
+<div class="node"><span class="fr">Serveur</span><span class="en">Server</span></div>
+</div>
+<div class="callout key">
+<div class="lbl"><span class="fr">Principe à retenir</span><span class="en">Principle to remember</span></div>
+<span class="fr">N'autoriser que ce qui est nécessaire. C'est ce qu'on appelle souvent le principe de moindre privilège, appliqué ici aux communications réseau.</span>
+<span class="en">Only allow what is necessary. This applies the principle of least privilege to network communications.</span>
+</div>
+</section>
+<!-- 6 -->
+<section class="card" id="s6">
+<div class="sec-head"><span class="num">06</span><h2><span class="fr">Démarche à adopter pendant le TP</span><span class="en">Method to follow during the lab</span></h2></div>
+<p><span class="fr">Après avoir exécuté <code>nmap</code>, plutôt que de simplement demander aux étudiants de recopier la liste des ports, il est plus formateur de leur poser, pour <b>chaque port découvert</b>, la série de questions suivante :</span>
+<span class="en">After running <code>nmap</code>, rather than simply asking students to copy the list of ports, it is more instructive to ask the following questions for <b>each discovered port</b>:</span></p>
+<ul class="qlist">
+<li><span class="qn">1</span><span><span class="fr">Quel service utilise ce port ?</span><span class="en">Which service uses this port?</span></span></li>
+<li><span class="qn">2</span><span><span class="fr">Ce service est-il nécessaire ?</span><span class="en">Is this service necessary?</span></span></li>
+<li><span class="qn">3</span><span><span class="fr">A-t-il besoin d'être accessible depuis Internet ?</span><span class="en">Does it need to be reachable from the Internet?</span></span></li>
+<li><span class="qn">4</span><span><span class="fr">Si non, comment pourrait-on limiter son exposition ?</span><span class="en">If not, how could its exposure be limited?</span></span></li>
+</ul>
+<p><span class="fr">Cette méthode transforme le TP d'un simple exercice de commandes Kali en un véritable raisonnement de sécurité.</span>
+<span class="en">This method turns the lab from a simple Kali command exercise into an exercise in genuine security reasoning.</span></p>
+<div class="callout key">
+<div class="lbl"><span class="fr">Message clé à faire retenir</span><span class="en">Key takeaway</span></div>
+<span class="fr">Réduire la surface d'attaque, ce n'est pas fermer tous les ports : c'est exposer uniquement les services nécessaires, aux utilisateurs et réseaux qui en ont réellement besoin.</span>
+<span class="en">Reducing the attack surface does not mean closing every port: it means exposing only the services that are necessary, to the users and networks that genuinely need them.</span>
+</div>
+</section>
+<!-- =================== PART 2 DIVIDER =================== -->
+<div class="divider">
+<div class="pnum"><span class="fr">Partie 2</span><span class="en">Part 2</span></div>
+<h2><span class="fr">Travaux pratiques</span><span class="en">Hands-on laboratory</span></h2>
+<p>
+<span class="fr">Cette seconde partie met en application les notions vues en cours, à travers un laboratoire complet : création volontaire de vulnérabilités, reconnaissance avec Nmap, analyse, remédiation et vérification.</span>
+<span class="en">This second part puts the theory into practice through a complete laboratory: deliberate creation of vulnerable situations, reconnaissance with Nmap, analysis, remediation, and verification.</span>
+</p>
+</div>
+<!-- 7 -->
+<section class="card" id="s7">
+<div class="sec-head"><span class="num">07</span><h2><span class="fr">Objectif pédagogique</span><span class="en">Learning objective</span></h2></div>
+<p><span class="fr">Ce TP aborde une idée centrale en audit de sécurité réseau : <b>le problème n'est pas simplement d'avoir des ports ouverts</b>. Un serveur doit nécessairement exposer certains services pour fonctionner. Le risque apparaît lorsque :</span>
+<span class="en">This lab addresses a central idea in network security auditing: <b>the problem is not simply having open ports</b>. A server necessarily has to expose some services to function. Risk appears when:</span></p>
+<ul>
+<li><span class="fr">un service est exposé alors qu'il n'est <b>pas nécessaire</b> ;</span><span class="en">a service is exposed even though it isn't <b>necessary</b>;</span></li>
+<li><span class="fr">un service <b>ancien ou obsolète</b> reste actif sans raison ;</span><span class="en">an <b>old or obsolete</b> service remains active without a valid reason;</span></li>
+<li><span class="fr">un service d'<b>administration</b> (SSH, RDP...) est accessible depuis un réseau qui ne devrait pas pouvoir l'utiliser ;</span><span class="en">an <b>administration</b> service (SSH, RDP…) is reachable from a network that should not have access to it;</span></li>
+<li><span class="fr">un <b>pare-feu mal configuré</b> autorise plus de trafic que nécessaire.</span><span class="en">a <b>misconfigured firewall</b> allows more traffic than necessary.</span></li>
+</ul>
+<table>
+<tr><th><span class="fr">Vulnérabilité</span><span class="en">Vulnerability</span></th><th><span class="fr">Question d'audit associée</span><span class="en">Related audit question</span></th></tr>
+<tr><td><span class="fr">Port inutile ouvert</span><span class="en">Unnecessary open port</span></td><td><span class="fr">Ce port doit-il vraiment être accessible ?</span><span class="en">Does this port really need to be reachable?</span></td></tr>
+<tr><td><span class="fr">Service inutile actif</span><span class="en">Unnecessary active service</span></td><td><span class="fr">Ce service est-il réellement nécessaire ?</span><span class="en">Is this service genuinely necessary?</span></td></tr>
+<tr><td><span class="fr">Administration exposée</span><span class="en">Exposed administration</span></td><td><span class="fr">SSH / RDP doit-il être accessible depuis ce réseau ?</span><span class="en">Should SSH / RDP be reachable from this network?</span></td></tr>
+<tr><td><span class="fr">Pare-feu mal configuré</span><span class="en">Misconfigured firewall</span></td><td><span class="fr">Les règles autorisent-elles plus de trafic que nécessaire ?</span><span class="en">Do the rules allow more traffic than necessary?</span></td></tr>
+</table>
+<div class="callout">
+<div class="lbl"><span class="fr">À retenir</span><span class="en">Key point</span></div>
+<span class="fr">Un port ouvert n'est pas, en soi, une vulnérabilité. C'est un fait technique qui doit être interrogé : est-il justifié, contrôlé et limité au strict nécessaire ?</span>
+<span class="en">An open port is not, by itself, a vulnerability. It is a technical fact that must be assessed: is it justified, controlled, and limited to what is strictly necessary?</span>
+</div>
+</section>
+<!-- 8 -->
+<section class="card" id="s8">
+<div class="sec-head"><span class="num">08</span><h2><span class="fr">Architecture du laboratoire</span><span class="en">Laboratory architecture</span></h2></div>
+<p><span class="fr">Le laboratoire repose sur deux machines virtuelles reliées par un réseau isolé de type <b>Host-Only</b>, garantissant que les manipulations restent confinées à l'environnement pédagogique.</span>
+<span class="en">The laboratory uses two virtual machines connected through an isolated <b>Host-Only</b> network, ensuring that all activities remain confined to the teaching environment.</span></p>
+<div class="arch">
+<div class="box">Kali Linux<br/><small><span class="fr">Machine d'audit — Nmap</span><span class="en">Audit machine — Nmap</span></small></div>
+<div class="link">▼ <span class="fr">réseau Host-Only (isolé)</span><span class="en">Host-Only network (isolated)</span> ▼</div>
+<div class="box">Ubuntu Server<br/><small><span class="fr">Machine cible — services volontairement exposés</span><span class="en">Target machine — deliberately exposed services</span></small></div>
+</div>
+<p><span class="fr">Ce TP est conçu pour être <b>totalement autonome</b> : la cible est fournie « fraîche », sans dépendre d'un TP précédent. Un étudiant peut donc commencer directement par ce TP.</span>
+<span class="en">This laboratory is designed to be <b>fully self-contained</b>: the target is provided in a fresh state, with no dependency on a previous lab. Students can therefore start directly with this lab.</span></p>
+</section>
+<!-- 9 -->
+<section class="card" id="s9">
+<div class="sec-head"><span class="num">09</span><h2><span class="fr">Démarche d'audit</span><span class="en">Audit methodology</span></h2></div>
+<p><span class="fr">Tous les TPs du module suivent la même logique de raisonnement, celle d'un auditeur professionnel :</span>
+<span class="en">Every laboratory in the module follows the same reasoning process used by a professional auditor:</span></p>
+<div class="flow">
+<span class="step"><span class="fr">Comprendre</span><span class="en">Understand</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Préparer</span><span class="en">Prepare</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Exposer</span><span class="en">Expose</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Reconnaître</span><span class="en">Reconnaissance</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Analyser</span><span class="en">Analyse</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Remédier</span><span class="en">Remediate</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Vérifier</span><span class="en">Verify</span></span>
+</div>
+</section>
+<!-- 10 -->
+<section class="card" id="s10">
+<div class="sec-head"><span class="num">10</span><h2><span class="fr">Étape 1 — Préparer la cible</span><span class="en">Step 1 — Prepare the target</span></h2></div>
+<p><span class="fr">Avant de parler de vulnérabilité, il est essentiel d'établir un <b>état initial</b> du système, comme le ferait tout auditeur avant d'intervenir.</span>
+<span class="en">Before discussing vulnerabilities, it is essential to establish an <b>initial state</b> of the system, as any auditor would before taking action.</span></p>
+<h3><span class="fr">Vérifier l'adresse réseau</span><span class="en">Check the network configuration</span></h3>
+<pre><code>ip addr</code></pre>
+<h3><span class="fr">Lister les services en écoute</span><span class="en">List listening services</span></h3>
+<pre><code>ss -tuln</code></pre>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question aux étudiants</span><span class="en">Question for students</span></div>
+<span class="fr">Quels ports sont actuellement en écoute sur la machine cible ?</span>
+<span class="en">Which ports are currently listening on the target machine?</span>
+</div>
+<h3><span class="fr">Vérifier les services actifs</span><span class="en">Check active services</span></h3>
+<pre><code>sudo systemctl --type=service --state=running</code></pre>
+</section>
+<!-- 11 -->
+<section class="card" id="s11">
+<div class="sec-head"><span class="num">11</span><h2><span class="fr">Étape 2 — Créer volontairement les situations vulnérables</span><span class="en">Step 2 — Deliberately create vulnerable situations</span></h2></div>
+<p><span class="fr">Conformément à la philosophie du cahier pédagogique, les vulnérabilités ne sont pas théoriques : elles sont créées volontairement dans le laboratoire, afin que les étudiants les observent, les analysent puis les corrigent.</span>
+<span class="en">In line with the module's teaching philosophy, vulnerabilities are not merely theoretical: they are deliberately created in the laboratory so that students can observe, analyze, and then remediate them.</span></p>
+<h3>V1 — <span class="fr">Service web inutile</span><span class="en">Unneeded web service</span></h3>
+<pre><code>sudo apt install apache2</code></pre>
+<pre><code>sudo systemctl status apache2</code></pre>
+<pre><code>ss -tuln</code></pre>
+<p><span class="fr">Les étudiants constatent qu'un nouveau port apparaît, généralement le port <code>80/tcp</code>.</span>
+<span class="en">Students should observe a new listening port, typically <code>80/tcp</code>.</span></p>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question aux étudiants</span><span class="en">Question for students</span></div>
+<span class="fr">Un serveur qui n'a pas besoin de fournir de pages web devrait-il conserver ce service actif ?</span>
+<span class="en">Should a server that does not need to serve web pages keep this service running?</span>
+</div>
+<h3>V2 — <span class="fr">Service inutile actif</span><span class="en">Unnecessary active service</span></h3>
+<div class="flow">
+<span class="step"><span class="fr">Logiciel installé</span><span class="en">Software installed</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Service actif</span><span class="en">Active service</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Port en écoute</span><span class="en">Listening port</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Service accessible</span><span class="en">Reachable service</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Surface d'attaque</span><span class="en">Attack surface</span></span>
+</div>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question aux étudiants</span><span class="en">Question for students</span></div>
+<span class="fr">Quelle différence faites-vous entre un logiciel installé et un service réellement exposé ?</span>
+<span class="en">What is the difference between software being installed and a service being exposed and reachable?</span>
+</div>
+</section>
+<!-- 12 -->
+<section class="card" id="s12">
+<div class="sec-head"><span class="num">12</span><h2><span class="fr">Étape 3 — Reconnaissance depuis Kali</span><span class="en">Step 3 — Reconnaissance from Kali</span></h2></div>
+<p><span class="fr">Nmap devient ici l'outil central de l'audit, comme dans les TPs précédents du module.</span>
+<span class="en">Nmap becomes the central audit tool here, as in the module's other laboratories.</span></p>
+<pre><code>nmap &lt;TARGET_IP&gt;</code></pre>
+<pre><code>nmap -sV &lt;TARGET_IP&gt;</code></pre>
+<p><span class="fr">Exemple de résultat obtenu par les étudiants :</span><span class="en">Example of a result obtained by students:</span></p>
+<pre><code>PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http</code></pre>
+<div class="callout warn">
+<div class="lbl"><span class="fr">Point pédagogique essentiel</span><span class="en">Key teaching point</span></div>
+<span class="fr">Nmap ne nous dit pas qu'une machine est vulnérable. Il nous donne des informations permettant de commencer l'audit. C'est l'analyse humaine, guidée par une méthode, qui transforme une observation en constat de risque.</span>
+<span class="en">Nmap does not tell us that a machine is vulnerable. It provides information with which to begin the audit. Human analysis, guided by a method, turns an observation into a risk finding.</span>
+</div>
+</section>
+<!-- 13 -->
+<section class="card" id="s13">
+<div class="sec-head"><span class="num">13</span><h2><span class="fr">Étape 4 — Identifier le service derrière le port</span><span class="en">Step 4 — Identify the service behind the port</span></h2></div>
+<p><span class="fr">Pour chaque port découvert, les étudiants complètent un tableau d'analyse :</span>
+<span class="en">For each discovered port, students complete an analysis table:</span></p>
+<table>
+<tr><th><span class="fr">Port</span><span class="en">Port</span></th><th><span class="fr">État</span><span class="en">State</span></th><th><span class="fr">Service</span><span class="en">Service</span></th><th><span class="fr">Nécessaire ?</span><span class="en">Needed?</span></th><th><span class="fr">Accessible depuis où ?</span><span class="en">Reachable from where?</span></th><th><span class="fr">Risque</span><span class="en">Risk</span></th></tr>
+<tr><td>22</td><td>open</td><td>SSH</td><td><span class="fr">Oui / Non</span><span class="en">Yes / No</span></td><td><span class="fr">Réseau labo</span><span class="en">Lab network</span></td><td>…</td></tr>
+<tr><td>80</td><td>open</td><td>HTTP</td><td><span class="fr">Oui / Non</span><span class="en">Yes / No</span></td><td><span class="fr">Réseau labo</span><span class="en">Lab network</span></td><td>…</td></tr>
+</table>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question aux étudiants</span><span class="en">Question for students</span></div>
+<span class="fr">Pourquoi un port ouvert n'est-il pas automatiquement une vulnérabilité ?</span>
+<span class="en">Why is an open port not automatically a vulnerability?</span>
+</div>
+</section>
+<!-- 14 -->
+<section class="card" id="s14">
+<div class="sec-head"><span class="num">14</span><h2><span class="fr">Étape 5 — Le cas particulier de SSH</span><span class="en">Step 5 — The specific case of SSH</span></h2></div>
+<p><span class="fr">SSH est un service légitime, indispensable à l'administration d'un serveur :</span>
+<span class="en">SSH is a legitimate service that can be essential for administering a server:</span></p>
+<div class="flow">
+<span class="step"><span class="fr">Administrateur</span><span class="en">Administrator</span></span><span class="arrow">→</span>
+<span class="step">SSH</span><span class="arrow">→</span>
+<span class="step"><span class="fr">Serveur</span><span class="en">Server</span></span>
+</div>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question centrale</span><span class="en">Central question</span></div>
+<span class="fr">Qui doit pouvoir accéder au service SSH ?</span>
+<span class="en">Who should be allowed to access the SSH service?</span>
+</div>
+<div class="flow">
+<span class="step">Internet</span><span class="arrow">→</span><span class="step">SSH</span>
+<br/><small style="color:var(--warn-ink); font-weight:600;"><span class="fr">Exposition large — à risque</span><span class="en">Broad exposure — risky</span></small>
+</div>
+<div class="flow">
+<span class="step">Internet</span><span class="arrow">→</span>
+<span class="step"><span class="fr">Pare-feu</span><span class="en">Firewall</span></span><span class="arrow">→</span>
+<span class="step">VPN / <span class="fr">réseau admin</span><span class="en">admin network</span></span><span class="arrow">→</span>
+<span class="step">SSH</span>
+<br/><small style="color:var(--ok-ink); font-weight:600;"><span class="fr">Exposition maîtrisée</span><span class="en">Controlled exposure</span></small>
+</div>
+<p><span class="fr">Le service SSH n'est donc pas mauvais en soi : c'est son exposition qui peut être mal maîtrisée.</span>
+<span class="en">SSH itself is not inherently a bad service; the issue is whether its exposure is properly controlled.</span></p>
+</section>
+<!-- 15 -->
+<section class="card" id="s15">
+<div class="sec-head"><span class="num">15</span><h2><span class="fr">Étape 6 — Examiner le pare-feu</span><span class="en">Step 6 — Assess the firewall</span></h2></div>
+<pre><code>sudo ufw status verbose</code></pre>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question aux étudiants</span><span class="en">Question for students</span></div>
+<span class="fr">Si le serveur n'a besoin que de HTTP et HTTPS, pourquoi autoriser d'autres ports ?</span>
+<span class="en">If the server only needs HTTP and HTTPS, why allow other ports?</span>
+</div>
+<h3><span class="fr">Principe de la politique restrictive</span><span class="en">The restrictive policy principle</span></h3>
+<div class="flow">
+<span class="step"><span class="fr">Tout bloquer</span><span class="en">Deny by default</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Autoriser uniquement ce qui est nécessaire</span><span class="en">Allow only what is necessary</span></span>
+</div>
+<p><span class="fr">Cette étape permet d'introduire naturellement deux notions fondamentales : le principe de moindre exposition et la réduction de la surface d'attaque.</span>
+<span class="en">This step naturally introduces two fundamental concepts: the principle of least exposure and attack-surface reduction.</span></p>
+</section>
+<!-- 16 -->
+<section class="card" id="s16">
+<div class="sec-head"><span class="num">16</span><h2><span class="fr">Étape 7 — Remédiation</span><span class="en">Step 7 — Remediation</span></h2></div>
+<table>
+<tr><th>AVANT / <span class="en">BEFORE</span></th><th>APRÈS / <span class="en">AFTER</span></th></tr>
+<tr><td><span class="fr">Service inutile actif</span><span class="en">Unnecessary service active</span></td><td><span class="fr">Service arrêté</span><span class="en">Service stopped</span></td></tr>
+<tr><td><span class="fr">Port inutile exposé</span><span class="en">Unnecessary port exposed</span></td><td><span class="fr">Port fermé</span><span class="en">Port closed</span></td></tr>
+<tr><td><span class="fr">SSH accessible largement</span><span class="en">SSH broadly reachable</span></td><td><span class="fr">SSH limité au réseau d'administration</span><span class="en">SSH restricted to the administration network</span></td></tr>
+<tr><td><span class="fr">Pare-feu permissif</span><span class="en">Overly permissive firewall</span></td><td><span class="fr">Règles minimales et justifiées</span><span class="en">Minimal, justified rules</span></td></tr>
+</table>
+<h3><span class="fr">Exemple de remédiation appliquée</span><span class="en">Example of remediation applied</span></h3>
+<pre><code>sudo systemctl stop apache2</code></pre>
+<pre><code>ss -tuln</code></pre>
+<p><span class="fr">Puis vérification depuis la machine d'audit :</span><span class="en">Then verify from the audit machine:</span></p>
+<pre><code>nmap -sV &lt;TARGET_IP&gt;</code></pre>
+<div class="callout question">
+<div class="lbl"><span class="fr">Question de vérification</span><span class="en">Verification question</span></div>
+<span class="fr">Le port a-t-il réellement disparu de la surface d'exposition ?</span>
+<span class="en">Has the port actually disappeared from the exposed attack surface?</span>
+</div>
+</section>
+<!-- 17 -->
+<section class="card" id="s17">
+<div class="sec-head"><span class="num">17</span><h2><span class="fr">Étape 8 — Audit final</span><span class="en">Step 8 — Final audit</span></h2></div>
+<table>
+<tr><th>ID</th><th><span class="fr">Problème</span><span class="en">Issue</span></th><th><span class="fr">Preuve</span><span class="en">Evidence</span></th><th><span class="fr">Risque</span><span class="en">Risk</span></th><th><span class="fr">Remédiation</span><span class="en">Remediation</span></th><th><span class="fr">Vérification</span><span class="en">Verification</span></th></tr>
+<tr><td>V1</td><td><span class="fr">Port inutile</span><span class="en">Unnecessary port</span></td><td>Nmap</td><td>…</td><td>…</td><td>…</td></tr>
+<tr><td>V2</td><td><span class="fr">Service inutile</span><span class="en">Unneeded service</span></td><td>ss / systemctl</td><td>…</td><td>…</td><td>…</td></tr>
+<tr><td>V3</td><td><span class="fr">Administration exposée</span><span class="en">Exposed administration</span></td><td>Nmap</td><td>…</td><td>…</td><td>…</td></tr>
+<tr><td>V4</td><td><span class="fr">Pare-feu mal configuré</span><span class="en">Misconfigured firewall</span></td><td>UFW</td><td>…</td><td>…</td><td>…</td></tr>
+</table>
+<p><span class="fr">Pour chaque vulnérabilité, l'étudiant doit fournir une preuve, un impact, un niveau de risque et une remédiation.</span>
+<span class="en">For every vulnerability, the student must provide evidence, an impact, a risk level, and a remediation.</span></p>
+</section>
+<!-- 18 -->
+<section class="card" id="s18">
+<div class="sec-head"><span class="num">18</span><h2><span class="fr">Synthèse pédagogique</span><span class="en">Teaching summary</span></h2></div>
+<p><span class="fr">Chaque TP du module doit rester indépendant des autres : aucun ne doit débuter par « comme nous l'avons vu dans le TP précédent ».</span>
+<span class="en">Every laboratory in the module must remain independent of the others: none should begin with “as we saw in the previous lab”.</span></p>
+<div class="flow">
+<span class="step"><span class="fr">Contexte</span><span class="en">Context</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Objectif</span><span class="en">Objective</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Prérequis</span><span class="en">Prerequisites</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Architecture</span><span class="en">Architecture</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Vulnérabilités créées</span><span class="en">Created vulnerabilities</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Audit</span><span class="en">Audit</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Remédiation</span><span class="en">Remediation</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Vérification</span><span class="en">Verification</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Questions</span><span class="en">Questions</span></span><span class="arrow">→</span>
+<span class="step"><span class="fr">Livrable</span><span class="en">Deliverable</span></span>
+</div>
+<div class="callout">
+<div class="lbl"><span class="fr">Fil conducteur du module</span><span class="en">The module's core reasoning</span></div>
+<span class="fr">Qu'est-ce qui est exposé ? → Pourquoi ? → Quel est le risque ? → Comment le prouver ? → Comment réduire le risque ? → Comment vérifier que la correction fonctionne ?</span>
+<span class="en">What is exposed? → Why? → What is the risk? → How can it be proven? → How can the risk be reduced? → How can we verify that the fix works?</span>
+</div>
+</section>
+<!-- 19 -->
+<section class="card" id="s19">
+<div class="sec-head"><span class="num">19</span><h2><span class="fr">Lexique</span><span class="en">Glossary</span></h2></div>
+<dl class="lex">
+<dt><span class="fr">Audit de sécurité</span><span class="en">Security audit</span></dt>
+<dd><span class="fr">Démarche méthodique consistant à examiner un système afin d'identifier ses vulnérabilités, d'en évaluer le risque, puis de proposer et vérifier des mesures de correction.</span><span class="en">A methodical process of examining a system to identify vulnerabilities, assess their risk, and propose and verify corrective measures.</span></dd>
+<dt><span class="fr">Port (réseau)</span><span class="en">Port (network)</span></dt>
+<dd><span class="fr">Numéro identifiant, au sein d'une adresse IP, le point d'entrée logique utilisé par un service pour communiquer.</span><span class="en">A number that identifies the logical entry point a service uses to communicate within an IP address.</span></dd>
+<dt>Service</dt>
+<dd><span class="fr">Programme actif sur un serveur qui écoute sur un ou plusieurs ports et répond aux requêtes des clients.</span><span class="en">A program running on a server that listens on one or more ports and responds to client requests.</span></dd>
+<dt><span class="fr">Surface d'attaque</span><span class="en">Attack surface</span></dt>
+<dd><span class="fr">Ensemble des points d'entrée par lesquels un système peut potentiellement être attaqué.</span><span class="en">The set of entry points through which a system could potentially be attacked.</span></dd>
+<dt>Nmap</dt>
+<dd><span class="fr">Outil de reconnaissance réseau permettant de découvrir les hôtes actifs, les ports ouverts et les services associés.</span><span class="en">A network reconnaissance tool used to discover live hosts, open ports, and associated services.</span></dd>
+<dt>ss</dt>
+<dd><span class="fr">Commande Linux permettant de lister les sockets réseau actifs et les ports en écoute sur une machine.</span><span class="en">A Linux command that lists active network sockets and listening ports on a machine.</span></dd>
+<dt>systemctl</dt>
+<dd><span class="fr">Outil de gestion des services système sous Linux.</span><span class="en">A Linux tool used to manage system services.</span></dd>
+<dt>UFW</dt>
+<dd><span class="fr">Interface simplifiée de gestion du pare-feu sous Ubuntu.</span><span class="en">A simplified firewall management interface for Ubuntu.</span></dd>
+<dt><span class="fr">Pare-feu</span><span class="en">Firewall</span></dt>
+<dd><span class="fr">Dispositif qui filtre le trafic réseau entrant et sortant selon des règles définies.</span><span class="en">A system or device that filters inbound and outbound network traffic according to defined rules.</span></dd>
+<dt>SSH</dt>
+<dd><span class="fr">Protocole permettant une connexion distante sécurisée et chiffrée à un serveur.</span><span class="en">A protocol that enables a secure, encrypted remote connection to a server.</span></dd>
+<dt>RDP</dt>
+<dd><span class="fr">Protocole d'administration à distance utilisé principalement sous Windows.</span><span class="en">A remote administration protocol used mainly on Windows systems.</span></dd>
+<dt><span class="fr">Principe de moindre privilège</span><span class="en">Principle of least privilege</span></dt>
+<dd><span class="fr">Un utilisateur, service ou règle réseau ne doit disposer que des droits strictement nécessaires.</span><span class="en">A user, service, or network rule should have only the rights that are strictly necessary.</span></dd>
+<dt><span class="fr">Principe de moindre exposition</span><span class="en">Principle of least exposure</span></dt>
+<dd><span class="fr">Un système ne doit exposer que les services et ports strictement nécessaires.</span><span class="en">A system should expose only the services and ports that are strictly necessary.</span></dd>
+<dt>VPN</dt>
+<dd><span class="fr">Réseau privé virtuel établissant une connexion chiffrée entre un utilisateur distant et un réseau interne.</span><span class="en">A virtual private network that establishes an encrypted connection between a remote user and an internal network.</span></dd>
+<dt>Host-Only</dt>
+<dd><span class="fr">Réseau virtuel isolé permettant à des machines virtuelles de communiquer sans accès à Internet.</span><span class="en">An isolated virtual network that lets virtual machines communicate without direct Internet access.</span></dd>
+<dt><span class="fr">Remédiation</span><span class="en">Remediation</span></dt>
+<dd><span class="fr">Action corrective appliquée pour supprimer ou réduire une vulnérabilité identifiée.</span><span class="en">A corrective action applied to remove or reduce an identified vulnerability.</span></dd>
+<dt><span class="fr">Vérification</span><span class="en">Verification</span></dt>
+<dd><span class="fr">Étape consistant à contrôler, après correction, que la vulnérabilité a bien disparu.</span><span class="en">A step that checks, after a fix, that the vulnerability has genuinely disappeared.</span></dd>
+</dl>
+</section>
+</main>
+</div>
+<!-- ============ FOOTER ============ -->
+<footer>
+<div class="foot-wrap">
+<div class="foot-col">
+<h4><span class="fr">Ports &amp; Services Exposés</span><span class="en">Exposed Ports &amp; Services</span></h4>
+<p style="font-size:.82rem; color:var(--ink-soft); max-width:260px;">
+<span class="fr">Support de cours et de TP sur l'audit des ports et services réseau.</span>
+<span class="en">Course and laboratory material on auditing network ports and services.</span>
+</p>
+<div class="foot-sig">by twagirumukiza</div>
+</div>
+<div class="foot-col">
+<h4><span class="fr">Navigation</span><span class="en">Navigation</span></h4>
+<a href="#s1"><span class="fr">Partie 1 — Cours</span><span class="en">Part 1 — Course</span></a>
+<a href="#s7"><span class="fr">Partie 2 — TP</span><span class="en">Part 2 — Lab</span></a>
+<a href="#s19"><span class="fr">Lexique</span><span class="en">Glossary</span></a>
+</div>
+<div class="foot-col">
+<h4><span class="fr">Informations légales</span><span class="en">Legal</span></h4>
+<button class="linklike" onclick="openModal('modal-license')"><span class="fr">Licence</span><span class="en">License</span></button>
+<button class="linklike" onclick="openModal('modal-legal')"><span class="fr">Mentions légales</span><span class="en">Legal notice</span></button>
+<button class="linklike" onclick="openModal('modal-cgu')"><span class="fr">Conditions générales d'utilisation</span><span class="en">Terms of use</span></button>
+</div>
+</div>
+<div class="foot-bottom">
+<span>© <span id="year"></span> Innocent Twagirumukiza — <span class="fr">Tous droits réservés</span><span class="en">All rights reserved</span></span>
+<span class="fr">Conçu &amp; rédigé by twagirumukiza</span><span class="en">Designed &amp; written by twagirumukiza</span>
+</div>
+</footer>
+<button aria-label="Top" class="scrolltop" id="scrolltop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<!-- ============ MODALS ============ -->
+<div class="modal-overlay" id="modal-license">
+<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
+<div class="modal-head">
+<h3><span class="fr">Licence</span><span class="en">License</span></h3>
+<button onclick="closeModal('modal-license')">✕</button>
+</div>
+<div class="modal-body">
+<p><span class="fr">Sauf mention contraire, le contenu pédagogique de ce site (textes, schémas, structure du cours et des travaux pratiques) est publié par Innocent Twagirumukiza sous licence <b>Creative Commons Attribution – Pas d'Utilisation Commerciale – Partage dans les Mêmes Conditions 4.0 International (CC BY-NC-SA 4.0)</b>.</span>
+<span class="en">Unless stated otherwise, the educational content of this site (text, diagrams, course and lab structure) is published by Innocent Twagirumukiza under the <b>Creative Commons Attribution – NonCommercial – ShareAlike 4.0 International license (CC BY-NC-SA 4.0)</b>.</span></p>
+<h4><span class="fr">Vous êtes autorisé à :</span><span class="en">You are free to:</span></h4>
+<p><span class="fr">Partager et adapter le contenu à des fins non commerciales, à condition de créditer l'auteur et de diffuser vos contributions sous la même licence.</span>
+<span class="en">Share and adapt the material for non-commercial purposes, provided you credit the author and distribute your contributions under the same license.</span></p>
+<h4><span class="fr">Commandes et extraits de code</span><span class="en">Commands and code snippets</span></h4>
+<p><span class="fr">Les commandes shell et exemples de configuration présents dans ce cours peuvent être librement réutilisés, sans condition d'attribution.</span>
+<span class="en">The shell commands and configuration examples shown in this course may be freely reused, with no attribution required.</span></p>
+<p><span class="fr">Pour toute utilisation commerciale, merci de contacter l'auteur.</span><span class="en">For any commercial use, please contact the author.</span></p>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-legal">
+<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
+<div class="modal-head">
+<h3><span class="fr">Mentions légales</span><span class="en">Legal notice</span></h3>
+<button onclick="closeModal('modal-legal')">✕</button>
+</div>
+<div class="modal-body">
+<h4><span class="fr">Description de l'entreprise</span><span class="en">Company description</span></h4>
+<table>
+<tr><td><span class="fr">Statut</span><span class="en">Status</span></td><td><span class="fr">Entreprise active depuis le 11/06/2004</span><span class="en">Active business since 11/06/2004</span></td></tr>
+<tr><td>SIREN</td><td>454 007 691</td></tr>
+<tr><td>SIRET <span class="fr">(siège)</span><span class="en">(head office)</span></td><td>454 007 691 00016</td></tr>
+<tr><td><span class="fr">Nom</span><span class="en">Surname</span></td><td>TWAGIRUMUKIZA</td></tr>
+<tr><td><span class="fr">Prénom</span><span class="en">First name</span></td><td>INNOCENT</td></tr>
+<tr><td><span class="fr">Catégorie juridique</span><span class="en">Legal category</span></td><td><span class="fr">Entrepreneur individuel</span><span class="en">Sole trader (individual entrepreneur)</span></td></tr>
+<tr><td>APE</td><td>62.02A — <span class="fr">Conseil en systèmes et logiciels informatiques</span><span class="en">IT systems and software consulting</span></td></tr>
+</table>
+<h4><span class="fr">Description de l'établissement</span><span class="en">Establishment description</span></h4>
+<table>
+<tr><td><span class="fr">Statut</span><span class="en">Status</span></td><td><span class="fr">Établissement actif depuis le 11/06/2004</span><span class="en">Active establishment since 11/06/2004</span></td></tr>
+<tr><td>SIRET</td><td>454 007 691 00016</td></tr>
+<tr><td><span class="fr">Adresse</span><span class="en">Address</span></td><td>87 RUE BAUDRICOURT, 75013 PARIS</td></tr>
+<tr><td>APE</td><td>62.02A — <span class="fr">Conseil en systèmes et logiciels informatiques</span><span class="en">IT systems and software consulting</span></td></tr>
+</table>
+<h4><span class="fr">Directeur de la publication</span><span class="en">Publication director</span></h4>
+<p>Innocent Twagirumukiza</p>
+<h4><span class="fr">Hébergement</span><span class="en">Hosting</span></h4>
+<p><span class="fr">Ce site est distribué sous forme d'un fichier statique et peut être hébergé par le prestataire de votre choix.</span>
+<span class="en">This site is distributed as a static file and may be hosted by the provider of your choice.</span></p>
+</div>
+</div>
+</div>
+<div class="modal-overlay" id="modal-cgu">
+<div class="modal" role="dialog" aria-modal="true" tabindex="-1">
+<div class="modal-head">
+<h3><span class="fr">Conditions générales d'utilisation</span><span class="en">Terms of use</span></h3>
+<button onclick="closeModal('modal-cgu')">✕</button>
+</div>
+<div class="modal-body">
+<h4>1. <span class="fr">Objet</span><span class="en">Purpose</span></h4>
+<p><span class="fr">Les présentes conditions générales d'utilisation (CGU) régissent l'accès et l'utilisation du site « Ports &amp; Services Exposés », édité par Innocent Twagirumukiza (SIRET 454 007 691 00016).</span>
+<span class="en">These terms of use govern access to and use of the "Exposed Ports &amp; Services" site, published by Innocent Twagirumukiza (SIRET 454 007 691 00016).</span></p>
+<h4>2. <span class="fr">Accès au site</span><span class="en">Access to the site</span></h4>
+<p><span class="fr">Le site est accessible gratuitement à tout utilisateur disposant d'un accès à Internet. Tous les frais nécessaires à l'accès (matériel, connexion) sont à la charge de l'utilisateur.</span>
+<span class="en">The site is freely accessible to anyone with an Internet connection. Any costs required to access it (hardware or connectivity) are the user's responsibility.</span></p>
+<h4>3. <span class="fr">Propriété intellectuelle</span><span class="en">Intellectual property</span></h4>
+<p><span class="fr">Le contenu pédagogique (textes, schémas, structure) est protégé par le droit d'auteur et distribué selon les termes précisés dans la Licence de ce site. Toute reproduction à des fins commerciales est soumise à autorisation préalable.</span>
+<span class="en">The educational content (text, diagrams, structure) is protected by copyright and distributed under the terms set out in this site's License. Any reproduction for commercial purposes requires prior authorization.</span></p>
+<h4>4. <span class="fr">Usage pédagogique et responsabilité</span><span class="en">Educational use and liability</span></h4>
+<p><span class="fr">Les commandes et manipulations décrites sont destinées à un usage exclusivement pédagogique, sur des machines et réseaux dont l'utilisateur est propriétaire ou pour lesquels il dispose d'une autorisation explicite. L'auteur ne saurait être tenu responsable d'un usage non autorisé ou détourné des informations fournies.</span>
+<span class="en">The commands and procedures described are intended solely for educational use, on machines and networks owned by the user or for which the user has explicit authorization. The author cannot be held liable for unauthorized or improper use of the information provided.</span></p>
+<h4>5. <span class="fr">Disponibilité</span><span class="en">Availability</span></h4>
+<p><span class="fr">L'auteur s'efforce d'assurer l'accessibilité du site mais ne garantit pas une disponibilité continue et pourra interrompre l'accès pour maintenance sans préavis.</span>
+<span class="en">The author makes reasonable efforts to keep the site accessible but does not guarantee continuous availability and may interrupt access for maintenance without notice.</span></p>
+<h4>6. <span class="fr">Droit applicable</span><span class="en">Governing law</span></h4>
+<p><span class="fr">Les présentes CGU sont soumises au droit français. Tout litige relève de la compétence des tribunaux français.</span>
+<span class="en">These terms of use are governed by French law. Any dispute falls under the jurisdiction of the French courts.</span></p>
+</div>
+</div>
+</div>
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ---- language ---- */
+function setLang(l){
+  document.documentElement.setAttribute('data-lang', l);
+  document.documentElement.setAttribute('lang', l);
+  document.title = l === 'en' ? 'Exposed Ports & Services — Network Auditing Course & Lab' : 'Ports & Services Exposés — Cours & TP d’audit réseau';
+  document.getElementById('btn-fr').classList.toggle('active', l==='fr');
+  document.getElementById('btn-en').classList.toggle('active', l==='en');
+  document.getElementById('btn-fr').setAttribute('aria-pressed', l==='fr');
+  document.getElementById('btn-en').setAttribute('aria-pressed', l==='en');
+  localStorage.setItem('psx-lang', l);
+}
+/* ---- theme ---- */
+function toggleTheme(){
+  var html = document.documentElement;
+  var cur = html.getAttribute('data-theme');
+  var next = cur === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', next);
+  document.getElementById('theme-toggle').textContent = next === 'light' ? '🌙' : '☀️';
+  localStorage.setItem('psx-theme', next);
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var savedTheme = localStorage.getItem('psx-theme');
+  if(savedTheme){
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('theme-toggle').textContent = savedTheme === 'light' ? '🌙' : '☀️';
+  }
+  var savedLang = localStorage.getItem('psx-lang');
+  if(savedLang){ setLang(savedLang); }
+});
+
+/* ---- font size ---- */
+var fontStep = 0;
+function changeFont(dir){
+  fontStep = Math.max(-2, Math.min(6, fontStep + dir));
+  document.documentElement.style.fontSize = (16 + fontStep) + 'px';
+  localStorage.setItem('psx-font', fontStep);
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var savedFont = localStorage.getItem('psx-font');
+  if(savedFont !== null){
+    fontStep = parseInt(savedFont, 10);
+    document.documentElement.style.fontSize = (16 + fontStep) + 'px';
+  }
+});
+
+/* ---- mobile nav ---- */
+var burger = document.getElementById('navburger');
+var side = document.getElementById('sidenav');
+burger.addEventListener('click', function(){ side.classList.toggle('open'); });
+document.querySelectorAll('.side a').forEach(function(a){
+  a.addEventListener('click', function(){ side.classList.remove('open'); });
+});
+
+/* ---- modals ---- */
+var lastFocused = null;
+function openModal(id){
+  lastFocused = document.activeElement;
+  var overlay = document.getElementById(id);
+  overlay.classList.add('open');
+  var modal = overlay.querySelector('.modal');
+  if(modal) modal.focus();
+}
+function closeModal(id){
+  document.getElementById(id).classList.remove('open');
+  if(lastFocused) lastFocused.focus();
+}
+document.querySelectorAll('.modal-overlay').forEach(function(ov){
+  ov.addEventListener('click', function(e){ if(e.target === ov) ov.classList.remove('open'); });
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ document.querySelectorAll('.modal-overlay.open').forEach(function(m){ m.classList.remove('open'); }); }
+});
+
+/* ---- scroll top + active nav highlight ---- */
+var scrollBtn = document.getElementById('scrolltop');
+window.addEventListener('scroll', function(){
+  scrollBtn.classList.toggle('show', window.scrollY > 500);
+});
+
+var sections = document.querySelectorAll('main section.card');
+var navLinks = document.querySelectorAll('.side a');
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(entry){
+    if(entry.isIntersecting){
+      navLinks.forEach(function(l){ l.classList.remove('active'); l.removeAttribute('aria-current'); });
+      var match = document.querySelector('.side a[href="#' + entry.target.id + '"]');
+      if(match){ match.classList.add('active'); match.setAttribute('aria-current', 'true'); }
+    }
+  });
+}, {rootMargin:'-20% 0px -70% 0px'});
+sections.forEach(function(s){ observer.observe(s); });
+</script>
+</body>
+</html>
